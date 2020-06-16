@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 
-const SignOutScreen = () => {
+const SignUpScreen = () => {
   return (
     <View>
       <Text>Sign in</Text>
@@ -9,4 +9,4 @@ const SignOutScreen = () => {
   );
 }
 
-export default SignOutScreen;
+export default SignUpScreen;

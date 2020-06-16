@@ -50,7 +50,7 @@ export default class WegoApiClient {
         this.#token = deatachToken(response);
         await AsyncStorage.setItem('JWT', this.#token);
       }
-      json = await response.json();
+      const json = await response.json();
       const result = { body: json, status: response.status };
 
       return new Promise(resolve => resolve(result));
@@ -61,7 +61,7 @@ export default class WegoApiClient {
 
   // user params: email, password
   async signIn(user) {
-    const response = fetch(`${this.endpointUrl}auth`, {
+    const response = await fetch(`${this.endpointUrl}auth`, {
       method: 'POST',
       headers: this.headers,
       body: JSON.stringify(user)
@@ -72,7 +72,7 @@ export default class WegoApiClient {
       this.#token = deatachToken(response);
       await AsyncStorage.setItem('JWT', this.#token);
     }
-    json = await response.json();
+    const json = await response.json();
     const result = { body: json, status: response.status };
 
     return new Promise(resolve => resolve(result));
@@ -91,19 +91,21 @@ export default class WegoApiClient {
       this.#token = deatachToken(response);
       await AsyncStorage.setItem('JWT', this.#token);
     }
-    json = await response.json();
+    const json = await response.json();
     const result = { body: json, status: response.status };
 
     return new Promise(resolve => resolve(result));
   }
 
   async signOut() {
-    const response = fetch(`${this.endpointUrl}auth`, {
+    const response = await fetch(`${this.endpointUrl}auth`, {
       method: 'DELETE',
       headers: appendToken(this.headers, this.#token),
     });
     // Remove token from storage and memory on successful sign out
-    json = await response.json();
+    let json = {}
+    if (response.body)
+      json = await response.json();
     const result = { body: json, status: response.status };
     if (response.status < 300) {
       this.#token = '';
@@ -114,11 +116,11 @@ export default class WegoApiClient {
   }
 
   async getProfile() {
-    const response = fetch(`${this.endpointUrl}app/profile`, {
+    const response = await fetch(`${this.endpointUrl}app/profile`, {
       method: 'GET',
       headers: appendToken(this.headers, this.#token),
     });
-    json = await response.json();
+    const json = await response.json();
     const result = { body: json, status: response.status };
 
     return new Promise(resolve => resolve(result));
@@ -126,7 +128,7 @@ export default class WegoApiClient {
 
   // profile params: name, lastName, secondLastname, birthday, phoneNumber, profilePicture
   async updateProfile(profile) {
-    return fetch(`${this.endpointUrl}app/profile`, {
+    return await fetch(`${this.endpointUrl}app/profile`, {
       method: 'PUT',
       headers: appendToken(this.headers, this.#token),
       body: {}

@@ -4,38 +4,47 @@ import React, { useReducer, useEffect, useContext, createContext } from 'react';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
 import WegoApiClient from '../api-client';
 
 import SplashLoadScreen from '../screens/SplashLoadScreen';
 import SigInScreen from '../screens/SignInScreen';
-import SignOutScreen from '../screens/SignOutScreen';
+import SignUpScreen from '../screens/SignUpScreen';
 import HomeScreen from '../screens/HomeScreen';
 
 export const AuthContext = createContext();
+const client = new WegoApiClient('https://togetherwego.herokuapp.com/', 'Customers');
 
 const Stack = createStackNavigator();
 function AuthNavigator() {
   return (
-    <Stack.Navigator initialRouteName='SignIn'>
+    <Stack.Navigator initialRouteName='SignIn' screenOptions={{
+      headerShown: false
+    }}>
       <Stack.Screen name='SignIn' component={SigInScreen} />
-      <Stack.Screen name='SignOut' component={SignOutScreen} />
+      <Stack.Screen name='SignUp' component={SignUpScreen} />
     </Stack.Navigator>
   );
 }
 
 const Drawer = createDrawerNavigator();
 function AppNavigator() {
-  const authContext = useContext(AuthContext);
+  const { signOut } = useContext(AuthContext);
   return (
-    <Drawer.Navigator>
+    <Drawer.Navigator drawerContent={props => {
+      return (
+        <DrawerContentScrollView {...props}>
+          <DrawerItemList {...props} />
+          <DrawerItem label="Logout" onPress={() => { signOut().catch(err => console.log(err)) }} />
+        </DrawerContentScrollView>
+      )
+    }}>
       <Drawer.Screen name='Home' component={HomeScreen} />
     </Drawer.Navigator>
   );
 }
 
 const Routes = () => {
-  const client = new WegoApiClient('https://togetherwego.herokuapp.com/', 'Customers');
 
   function reducer(prevState, action) {
     switch (action.type) {
@@ -68,10 +77,11 @@ const Routes = () => {
   useEffect(() => {
     const refreshSession = async () => {
       await client.refreshToken();
-      dispatch({ type: 'restoreToken', tokenAvailable: client.tokenLoaded });
+      dispatch({ type: 'restoreToken', token: client.tokenLoaded });
     }
 
-    refreshSession();
+    if (!state.tokenAvailable)
+      refreshSession();
   });
 
   const authContext = React.useMemo(
@@ -79,7 +89,7 @@ const Routes = () => {
       apiClient: client,
       signIn: async user => {
         await client.signIn(user);
-        dispatch({ type: 'signIn', tokenAvailable: client.tokenLoaded });
+        dispatch({ type: 'signIn', token: client.tokenLoaded });
       },
       signOut: async () => {
         await client.signOut();
@@ -87,7 +97,7 @@ const Routes = () => {
       },
       signUp: async user => {
         await client.signUp();
-        dispatch({ type: 'signUp', tokenAvailable: client.tokenLoaded });
+        dispatch({ type: 'signUp', token: client.tokenLoaded });
       },
     })
   );
@@ -96,7 +106,7 @@ const Routes = () => {
     return <SplashLoadScreen />
 
   return (
-    <AuthContext.Provider>
+    <AuthContext.Provider value={authContext}>
       <NavigationContainer>
         {state.tokenAvailable ? (<AppNavigator />) : (<AuthNavigator />)}
       </NavigationContainer>
