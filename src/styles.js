@@ -18,10 +18,23 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginHorizontal: 12,
     marginBottom: 12,
+    // padding: 12,
+  }, cardShadow: {
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.20,
+    shadowRadius: 1.41,
+
+    elevation: 2,
   }, form: {
     margin: 12,
+  }, adjacentFields: {
+    flexDirection: 'row',
   }, field: {
-    // marginBottom: 4
+    marginBottom: 4
   }, label: {
     fontSize: 16
   }, inputbox: {
@@ -32,13 +45,10 @@ const styles = StyleSheet.create({
     height: 46,
   }, input: {
     paddingVertical: 0,
-    borderColor: 'red',
-    borderWidth: 1,
   }, fieldAnnotation: {
     color: '#B5B9DB',
     fontSize: 13
   }, bigButton: {
-    backgroundColor: '#00BD6F',
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 4
@@ -48,7 +58,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginHorizontal: 30
   }, smallButton: {
-    backgroundColor: '#B5B9DB',
     paddingVertical: 4,
     paddingHorizontal: 6,
     borderRadius: 4

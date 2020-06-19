@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 
-import React, { useReducer, useEffect, useContext, createContext } from 'react';
+import React, { useReducer, useEffect, useContext, createContext, useState } from 'react';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -11,6 +11,10 @@ import SplashLoadScreen from '../screens/SplashLoadScreen';
 import SigInScreen from '../screens/SignInScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import HomeScreen from '../screens/HomeScreen';
+
+import { Card } from '../components/Elements';
+import { Text, View } from 'react-native';
+import { Avatar } from 'react-native-elements';
 
 export const AuthContext = createContext();
 const client = new WegoApiClient('https://togetherwego.herokuapp.com/', 'Customers');
@@ -29,13 +33,37 @@ function AuthNavigator() {
 
 const Drawer = createDrawerNavigator();
 function AppNavigator() {
-  const { signOut } = useContext(AuthContext);
+  const { signOut, apiClient } = useContext(AuthContext);
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    if (!profile)
+      apiClient.getProfile().then(res => setProfile(res.body.profile));
+    else
+      console.log(apiClient.url + profile.picutre_url);
+  });
+
   return (
     <Drawer.Navigator drawerContent={props => {
       return (
-        <DrawerContentScrollView {...props}>
-          <DrawerItemList {...props} />
-          <DrawerItem label="Logout" onPress={() => { signOut().catch(err => console.log(err)) }} />
+        <DrawerContentScrollView contentContainerStyle={{ flex: 1, paddingVertical: 0 }} {...props}>
+          <Card color='#6D5DBA' noMargin={true} shadow={true}>
+            {profile && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 }}>
+                <Avatar
+                  medium
+                  rounded
+                  source={{ uri: apiClient.url + profile.picutre_url }}
+                  activeOpacity={0.7}
+                />
+                <Text>Hello! {profile.name}</Text>
+              </View>
+            )}
+          </Card>
+          <View style={{ flex: 1, flexDirection: 'column' }} >
+            <DrawerItemList style={{ flex: 2 }} {...props} />
+            <DrawerItem style={{ marginTop: 'auto' }} label="Log out" onPress={() => { signOut().catch(err => console.log(err)) }} />
+          </View>
         </DrawerContentScrollView>
       )
     }}>
@@ -76,8 +104,9 @@ const Routes = () => {
 
   useEffect(() => {
     const refreshSession = async () => {
-      await client.refreshToken();
+      const res = await client.refreshToken();
       dispatch({ type: 'restoreToken', token: client.tokenLoaded });
+
     }
 
     if (!state.tokenAvailable)
@@ -88,16 +117,18 @@ const Routes = () => {
     () => ({
       apiClient: client,
       signIn: async user => {
-        await client.signIn(user);
+        const res = await client.signIn(user);
         dispatch({ type: 'signIn', token: client.tokenLoaded });
+        return new Promise(resolve => resolve(res));
       },
       signOut: async () => {
         await client.signOut();
         dispatch({ type: 'signOut' })
       },
       signUp: async user => {
-        await client.signUp();
-        dispatch({ type: 'signUp', token: client.tokenLoaded });
+        const res = await client.signUp(user);
+        dispatch({ type: 'signIn', token: client.tokenLoaded });
+        return new Promise(resolve => resolve(res));
       },
     })
   );

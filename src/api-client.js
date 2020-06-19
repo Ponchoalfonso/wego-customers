@@ -20,6 +20,12 @@ export default class WegoApiClient {
   set applicationType(type) { this.headers.Application = type; }
   get applicationType() { return this.headers.Application; }
 
+  get url() {
+    const myUrl = this.endpointUrl.split('');
+    myUrl.pop();
+    return myUrl.join('');
+  }
+
   get tokenLoaded() { return this.#token ? true : false }
 
   async testConnection() {

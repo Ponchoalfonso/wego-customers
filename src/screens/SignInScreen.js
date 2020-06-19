@@ -1,64 +1,73 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, Image } from 'react-native';
-import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
+import React, { useContext } from 'react';
+import { View, Text, Image, Alert } from 'react-native';
+import { Formik } from 'formik';
+import { Card, TextField, CustomButton } from '../components/Elements';
 
 import { AuthContext } from '../components/Routes'
 import styles from '../styles';
 
 const SignInScreen = ({ navigation }) => {
-  const { signIn, apiClient } = useContext(AuthContext);
-  useEffect(() => {
+  const { signIn } = useContext(AuthContext);
 
-  });
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const submitForm = () => {
-    const form = { user: { email, password, } }
-    signIn(form).catch(e => console.log(e));
+  const submitForm = async (values, { setSubmitting, resetForm }) => {
+    const form = { user: values }
+    setSubmitting(true);
+    try {
+      const response = await signIn(form);
+      if (response.status == 401)
+        Alert.alert('Sign in failed', 'Email or password is incorrect!');
+    } catch (error) {
+      console.log(error);
+    }
+    resetForm();
+    setSubmitting(false);
   }
+
   return (
     <View style={styles.canvas}>
       <View style={styles.logoWrapper}>
         <Image style={styles.logo} source={require('../images/wego-slogan.png')} />
       </View>
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        <View style={styles.card}>
-          <View style={styles.form}>
-            <View style={{ ...styles.field, marginBottom: 12 }}>
-              <Text style={styles.label}>Email</Text>
-              <View style={styles.inputbox}>
-                <TextInput
-                  defaultValue=''
-                  styles={styles.input}
+        <Card>
+          <Formik
+            initialValues={{ email: '', password: '' }}
+            onSubmit={submitForm}
+          >
+            {(formikprops) => (
+              <View style={styles.form}>
+                <TextField
+                  label='email'
+                  labelText='Email'
+                  values={formikprops.values}
+                  handleChange={formikprops.handleChange}
                   placeholder='example@domain.com'
-                  defaultValue={email}
-                  onChangeText={text => setEmail(text)} />
+                />
+                <TextField
+                  label='password'
+                  labelText='Password'
+                  password={true}
+                  values={formikprops.values}
+                  handleChange={formikprops.handleChange}
+                />
+                <View style={{ alignItems: 'center', marginTop: 60 }}>
+                  <CustomButton
+                    submitting={formikprops.isSubmitting}
+                    text='Sign In'
+                    handlePress={formikprops.handleSubmit}
+                  />
+                  <Text>Or</Text>
+                  <CustomButton
+                    size='small'
+                    text='Sign Up'
+                    handlePress={() => navigation.navigate('SignUp')}
+                    submitting={formikprops.isSubmitting}
+                  />
+                </View>
               </View>
-            </View>
-            <View style={styles.field}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.inputbox}>
-                <TextInput
-                  defaultValue=''
-                  styles={styles.input}
-                  secureTextEntry={true}
-                  defaultValue={password}
-                  onChangeText={text => setPassword(text)} />
-              </View>
-            </View>
-            <View style={{ alignItems: 'center', marginTop: 60 }}>
-              <TouchableOpacity onPress={submitForm} style={styles.bigButton}>
-                <Text style={styles.bigButtonText}>Sign In</Text>
-              </TouchableOpacity>
-              <Text>Or</Text>
-              <TouchableOpacity onPress={() => { navigation.navigate('SignUp') }} style={styles.smallButton}>
-                <Text style={styles.smallButtonText}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+            )}
+          </Formik>
+        </Card>
       </View>
     </View>
   );
